@@ -5,7 +5,7 @@
 #
 # Distribute under GPLv2 or ask.
 #
-# Driver for a Graphtec Silhouette Cameo plotter.
+# Driver for a Graphtec Silhouette Cameo/Curio plotter.
 # modeled after https://github.com/nosliwneb/robocut.git
 # https://github.com/pmonta/gerber2graphtec/blob/master/file2graphtec
 #
@@ -18,6 +18,7 @@
 # 2016-05-16  no reset per default, this helps usbip.
 # 2016-05-21  detect python-usb < 1.0 and give instructions.
 # 2017-04-20  Adding Cameo3 USB IDs
+# 2021-04-    Adding Curio
 # 2020-06-    Adding Cameo4 and refactor code
 # 2021-06-03  Adding Cameo4 Pro
 # 2021-06-05  Allow commands to be transcribed to file, for later (re-)sending
@@ -119,7 +120,9 @@ CAMEO_MATS = dict(
   cameo_12x12=('1', 12, 12),
   cameo_12x24=('2', 24, 12),
   cameo_plus_15x15=('8', 15, 15),
-  cameo_pro_24x24=('9', 24, 24)
+  cameo_pro_24x24=('9', 24, 24),
+  curio_8p5x6=('1', 6, 8.5),
+  curio_8p5x12=('2', 12, 8.5)
 )
 
 #  robocut/Plotter.h:53 ff
@@ -136,6 +139,7 @@ PRODUCT_ID_SILHOUETTE_CAMEO4 =  0x1137
 # PRODUCT_ID_SILHOUETTE_CAMEO4PLUS = 0x1138
 # but I don't have one to check and did not want to jump to conclusions.
 PRODUCT_ID_SILHOUETTE_CAMEO4PRO = 0x1139
+PRODUCT_ID_SILHOUETTE_CURIO = 0x112c
 PRODUCT_ID_SILHOUETTE_PORTRAIT = 0x1123
 PRODUCT_ID_SILHOUETTE_PORTRAIT2 = 0x1132
 
@@ -222,6 +226,8 @@ DEVICE = [
                     # the prior Cameo4 settings above.
    'length_mm': 3000,
    'margin_left_mm': 0.0, 'margin_top_mm': 0.0, 'regmark': True },
+ { 'vendor_id': VENDOR_ID_GRAPHTEC, 'product_id': PRODUCT_ID_SILHOUETTE_CURIO, 'name': 'Silhouette Curio',
+   'width_mm':  215.9, 'length_mm': 3000, 'margin_left_mm':0.0, 'margin_top_mm':0.0, 'regmark': True }, # TODO check margins
  { 'vendor_id': VENDOR_ID_GRAPHTEC, 'product_id': PRODUCT_ID_CC200_20, 'name': 'Craft Robo CC200-20',
    'width_mm':  200, 'length_mm': 1000, 'regmark': True },
  { 'vendor_id': VENDOR_ID_GRAPHTEC, 'product_id': PRODUCT_ID_CC300_20, 'name': 'Craft Robo CC300-20' },
@@ -812,7 +818,7 @@ Alternatively, you can add yourself to group 'lp' and logout/login.""" % (self.h
     self.send_command(["\\%d,%d" % (top, left), "Z%d,%d" % (bottom, right)])
 
   def set_cutting_mat(self, cuttingmat, mediawidth, mediaheight):
-    """Setting Cutting mat only for Cameo 3 and 4
+    """Setting Cutting mat only for Cameo 3 and 4, Curio
 
     Parameters
     ----------
@@ -925,7 +931,7 @@ Alternatively, you can add yourself to group 'lp' and logout/login.""" % (self.h
     if toolholder is None:
       toolholder = 1
 
-    if self.product_id() in PRODUCT_LINE_CAMEO3_ON:
+    if self.product_id() in PRODUCT_LINE_CAMEO3_ON + [PRODUCT_ID_SILHOUETTE_CURIO]:
       self.send_command(tool.select())
 
     print("toolholder: %d" % toolholder, file=self.log)
