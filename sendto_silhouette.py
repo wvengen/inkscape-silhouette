@@ -311,7 +311,7 @@ class SendtoSilhouette(inkex.Effect):
                 dest = "bladediameter", type = float, default = 0.9,
                 help="[0..2.3] diameter of the used blade [mm], default = 0.9")
         self.arg_parser.add_argument("-C", "--cuttingmat",
-                choices=("cameo_12x12", "cameo_12x24", "no_mat"), dest = "cuttingmat", default = "cameo_12x12",
+                choices=("cameo_12x12", "cameo_12x24", "curio_8.5x6", "curio_8.5x12", "no_mat"), dest = "cuttingmat", default = "cameo_12x12",
                 help="Use cutting mat")
         self.arg_parser.add_argument("-D", "--depth",
                 dest = "depth", type = int, default = -1,

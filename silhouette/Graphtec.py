@@ -5,7 +5,7 @@
 #
 # Distribute under GPLv2 or ask.
 #
-# Driver for a Graphtec Silhouette Cameo plotter.
+# Driver for a Graphtec Silhouette Cameo/Curio plotter.
 # modeled after https://github.com/nosliwneb/robocut.git
 # https://github.com/pmonta/gerber2graphtec/blob/master/file2graphtec
 #
@@ -19,6 +19,7 @@
 # 2016-05-21  detect python-usb < 1.0 and give instructions.
 # 2017-04-20  Adding Cameo3 USB IDs
 # 2020-06-    Adding Cameo4 and refactor code
+# 2021-04-    Adding Curio
 
 from __future__ import print_function
 
@@ -122,6 +123,7 @@ PRODUCT_ID_SILHOUETTE_CAMEO =  0x1121
 PRODUCT_ID_SILHOUETTE_CAMEO2 =  0x112b
 PRODUCT_ID_SILHOUETTE_CAMEO3 =  0x112f
 PRODUCT_ID_SILHOUETTE_CAMEO4 =  0x1137
+PRODUCT_ID_SILHOUETTE_CURIO = 0x112c
 PRODUCT_ID_SILHOUETTE_PORTRAIT = 0x1123
 PRODUCT_ID_SILHOUETTE_PORTRAIT2 = 0x1132
 
@@ -168,6 +170,8 @@ DEVICE = [
    # margin_top_mm is just for safety when moving backwards with thin media
    # margin_left_mm is a physical limit, but is relative to width_mm!
    'width_mm':  304.8, 'length_mm': 3000, 'margin_left_mm':0.0, 'margin_top_mm':0.0, 'regmark': True },
+ { 'vendor_id': VENDOR_ID_GRAPHTEC, 'product_id': PRODUCT_ID_SILHOUETTE_CURIO, 'name': 'Silhouette Curio',
+   'width_mm':  215.9, 'length_mm': 3000, 'margin_left_mm':0.0, 'margin_top_mm':0.0, 'regmark': True }, # TODO check margins
  { 'vendor_id': VENDOR_ID_GRAPHTEC, 'product_id': PRODUCT_ID_CC200_20, 'name': 'Craft Robo CC200-20',
    'width_mm':  200, 'length_mm': 1000, 'regmark': True },
  { 'vendor_id': VENDOR_ID_GRAPHTEC, 'product_id': PRODUCT_ID_CC300_20, 'name': 'Craft Robo CC300-20' },
@@ -707,22 +711,22 @@ Alternatively, you can add yourself to group 'lp' and logout/login.""" % (self.h
     self.send_command(["\\%d,%d" % (top, left), "Z%d,%d" % (bottom, right)])
 
   def set_cutting_mat(self, cuttingmat, mediawidth, mediaheight):
-    """Setting Cutting mat only for Cameo 3 and 4
+    """Setting Cutting mat only for Cameo 3 and 4, Curio
 
     Parameters
     ----------
-        cuttingmat : {'cameo_12x12', 'cameo_12x24'. None}
+        cuttingmat : {'cameo_12x12', 'cameo_12x24', 'curio_8.5x6', 'curio_8.5x12'}, optional
             type of the cutting mat
         mediawidth : float
             width of the media
         mediaheight : float
             height of the media
     """
-    if self.product_id() not in [PRODUCT_ID_SILHOUETTE_CAMEO3, PRODUCT_ID_SILHOUETTE_CAMEO4]:
+    if self.product_id() not in [PRODUCT_ID_SILHOUETTE_CAMEO3, PRODUCT_ID_SILHOUETTE_CAMEO4, PRODUCT_ID_SILHOUETTE_CURIO]:
       return
-    if cuttingmat == 'cameo_12x12':
+    if cuttingmat == 'cameo_12x12' or cuttingmat == 'curio_8.5x6':
       self.send_command("TG1")
-    elif cuttingmat == 'cameo_12x24':
+    elif cuttingmat == 'cameo_12x24' or cuttingmat == 'curio_8.5x12':
       self.send_command("TG2")
     else:
       self.send_command("TG0")
@@ -736,6 +740,10 @@ Alternatively, you can add yourself to group 'lp' and logout/login.""" % (self.h
       self.set_boundary(0, 0, _inch_2_SU(12), _inch_2_SU(12))
     elif cuttingmat == 'cameo_12x24':
       self.set_boundary(0, 0, _inch_2_SU(24), _inch_2_SU(12))
+    elif cuttingmat == 'curio_8.5x6':
+      self.set_boundary(0, 0, _inch_2_SU(6), _inch_2_SU(8.5))
+    elif cuttingmat == 'curio_8.5x12':
+      self.set_boundary(0, 0, _inch_2_SU(12), _inch_2_SU(8.5))
     else:
       bottom = _mm_2_SU(self.hardware['length_mm'] if 'length_mm' in self.hardware else mediaheight)
       right = _mm_2_SU(self.hardware['width_mm'] if 'width_mm' in self.hardware else mediawidth)
@@ -757,7 +765,7 @@ Alternatively, you can add yourself to group 'lp' and logout/login.""" % (self.h
             range is [1..2]. Defaults to 1.
         pen : bool, optional
             media dependent. Defaults to None.
-        cuttingmat : {'cameo_12x12', 'cameo_12x24'}, optional
+        cuttingmat : {'cameo_12x12', 'cameo_12x24', 'curio_8.5x6', 'curio_8.5x12'}, optional
             setting the cutting mat. Defaults to None.
         sharpencorners : bool, optional
             Defaults to False.
@@ -820,7 +828,7 @@ Alternatively, you can add yourself to group 'lp' and logout/login.""" % (self.h
     if toolholder is None:
       toolholder = 1
 
-    if self.product_id() in [PRODUCT_ID_SILHOUETTE_CAMEO3, PRODUCT_ID_SILHOUETTE_CAMEO4]:
+    if self.product_id() in [PRODUCT_ID_SILHOUETTE_CAMEO3, PRODUCT_ID_SILHOUETTE_CAMEO4, PRODUCT_ID_SILHOUETTE_CURIO]:
       self.send_command(tool.select())
 
     print("toolholder: %d" % toolholder, file=self.log)
